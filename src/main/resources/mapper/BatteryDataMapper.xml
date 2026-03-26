@@ -29,4 +29,8 @@
         ORDER BY created_at DESC LIMIT #{limit}
     </select>
 
+    <select id="selectDistinctDeviceUuids" resultType="java.lang.String">
+        SELECT device_uuid FROM battery_data GROUP BY device_uuid ORDER BY MAX(created_at) DESC
+    </select>
+
 </mapper>

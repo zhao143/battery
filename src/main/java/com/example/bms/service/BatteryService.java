@@ -185,12 +185,25 @@ public class BatteryService {
         return result;
     }
 
-    public BatteryData latest() {
-        return null;
+    public List<BatteryData> recent(int limit) {
+        List<BatteryData> result = new ArrayList<>();
+        List<String> deviceUuids = batteryDataMapper.selectDistinctDeviceUuids();
+
+        for (String deviceUuid : deviceUuids) {
+            BatteryData latest = latestByUuid(deviceUuid);
+            if (latest != null) {
+                result.add(latest);
+            }
+            if (result.size() >= limit) {
+                break;
+            }
+        }
+        return result;
     }
 
-    public List<BatteryData> recent(int limit) {
-        return new ArrayList<>();
+    public BatteryData latest() {
+        List<BatteryData> list = recent(1);
+        return list.isEmpty() ? null : list.get(0);
     }
 
     public int getDesiredFanState() { return desiredFanState.get(); }

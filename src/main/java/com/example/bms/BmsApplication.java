@@ -15,7 +15,6 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,10 +27,9 @@ public class BmsApplication {
     }
 
     @Bean
-    public CommandLineRunner initData(SysUserMapper userMapper, SysRoleMapper roleMapper, 
+    public CommandLineRunner initData(SysUserMapper userMapper, SysRoleMapper roleMapper,
                                       DeviceMapper deviceMapper, UserDeviceMapper userDeviceMapper,
-                                      SysUserRoleMapper userRoleMapper,
-                                      PasswordEncoder encoder) {
+                                      SysUserRoleMapper userRoleMapper) {
         return args -> {
             // 创建角色
             List<SysRole> roles = roleMapper.selectAll();
@@ -51,15 +49,6 @@ public class BmsApplication {
                 roleMapper.insert(userRole);
                 System.out.println("初始化角色数据完成!");
             }
-
-            // 重置密码
-            List<SysUser> users = userMapper.selectAll();
-            for (SysUser user : users) {
-                user.setPassword(encoder.encode("password123"));
-                user.setUpdatedAt(LocalDateTime.now());
-                userMapper.update(user);
-            }
-            System.out.println("所有用户密码已重置为: password123");
 
             // 分配用户角色
             List<SysUserRole> userRoles = userRoleMapper.selectAll();
