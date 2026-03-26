@@ -117,6 +117,35 @@ public class BatteryController {
         return ResponseEntity.ok(Map.of("message", "设备绑定成功", "deviceId", existingDevice.getId(), "deviceUuid", uuid));
     }
 
+    @PutMapping("/devices/{deviceUuid}")
+    @Operation(summary = "更新设备信息（仅设备所有者）")
+    public ResponseEntity<?> updateDevice(@PathVariable String deviceUuid, @RequestBody Map<String, String> request) {
+        JwtUserDetails user = getCurrentUser();
+        if (user == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "未登录"));
+        }
+
+        Device device = deviceService.getDeviceByUuid(deviceUuid);
+        if (device == null) {
+            return ResponseEntity.status(404).body(Map.of("message", "设备不存在"));
+        }
+
+        if (!"admin".equals(user.getUsername()) &&
+            (device.getUserId() == null || !device.getUserId().equals(user.getUserId()))) {
+            return ResponseEntity.status(403).body(Map.of("message", "无权限修改该设备"));
+        }
+
+        String deviceName = request.get("deviceName");
+        if (deviceName != null && !deviceName.isEmpty()) {
+            device.setDeviceName(deviceName);
+        }
+        device.setUpdatedAt(java.time.LocalDateTime.now());
+
+        deviceService.updateDevice(device);
+
+        return ResponseEntity.ok(Map.of("message", "设备更新成功"));
+    }
+
     @GetMapping("/latest")
     @Operation(summary = "获取最新电池数据(所有设备最新)")
     public ResponseEntity<?> getLatest() {

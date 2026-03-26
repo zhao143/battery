@@ -50,7 +50,7 @@ public class AuthController {
         System.out.println("=== Login ===");
         System.out.println("User: " + username + " (id=" + user.getId() + ")");
         System.out.println("Roles: " + roles);
-        
+
         String token = jwtUtil.generateToken(user.getUsername(), user.getId());
 
         Map<String, Object> result = new HashMap<>();
@@ -61,7 +61,7 @@ public class AuthController {
         result.put("roles", roles.stream().map(SysRole::getRoleKey).toList());
 
         System.out.println("Returning roles: " + roles.stream().map(SysRole::getRoleKey).toList());
-        
+
         return ResponseEntity.ok(result);
     }
 
@@ -71,6 +71,8 @@ public class AuthController {
         String username = registerRequest.get("username");
         String password = registerRequest.get("password");
         String nickname = registerRequest.getOrDefault("nickname", username);
+        String email = registerRequest.get("email");
+        String phone = registerRequest.get("phone");
 
         if (username == null || username.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("message", "用户名不能为空"));
@@ -80,6 +82,18 @@ public class AuthController {
         }
         if (password.length() < 6) {
             return ResponseEntity.badRequest().body(Map.of("message", "密码长度不能少于6位"));
+        }
+        if (email != null && !email.isEmpty()) {
+            SysUser byEmail = userMapper.selectByEmail(email);
+            if (byEmail != null) {
+                return ResponseEntity.status(409).body(Map.of("message", "邮箱已被使用"));
+            }
+        }
+        if (phone != null && !phone.isEmpty()) {
+            SysUser byPhone = userMapper.selectByPhone(phone);
+            if (byPhone != null) {
+                return ResponseEntity.status(409).body(Map.of("message", "电话已被使用"));
+            }
         }
 
         SysUser existingUser = userMapper.selectByUsername(username);
@@ -91,6 +105,8 @@ public class AuthController {
         newUser.setUsername(username);
         newUser.setPassword(passwordEncoder.encode(password));
         newUser.setNickname(nickname);
+        newUser.setEmail(email);
+        newUser.setPhone(phone);
         newUser.setStatus(1);
         newUser.setCreatedAt(java.time.LocalDateTime.now());
         newUser.setUpdatedAt(java.time.LocalDateTime.now());
@@ -125,8 +141,54 @@ public class AuthController {
         Map<String, Object> result = new HashMap<>();
         result.put("username", user.getUsername());
         result.put("nickname", user.getNickname());
+        result.put("email", user.getEmail());
+        result.put("phone", user.getPhone());
         result.put("userId", user.getId());
         result.put("roles", roles.stream().map(SysRole::getRoleKey).toList());
         return ResponseEntity.ok(result);
+    }
+
+    @PutMapping("/me")
+    @Operation(summary = "修改当前用户信息")
+    public ResponseEntity<?> updateCurrentUser(@RequestHeader("Authorization") String authHeader,
+                                               @RequestBody Map<String, String> updateRequest) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(401).body(Map.of("message", "未登录"));
+        }
+        String token = authHeader.substring(7);
+        if (!jwtUtil.validateToken(token)) {
+            return ResponseEntity.status(401).body(Map.of("message", "token无效"));
+        }
+        String username = jwtUtil.getUsernameFromToken(token);
+        SysUser user = userMapper.selectByUsername(username);
+        if (user == null) {
+            return ResponseEntity.status(404).body(Map.of("message", "用户不存在"));
+        }
+
+        String nickname = updateRequest.get("nickname");
+        String email = updateRequest.get("email");
+        String phone = updateRequest.get("phone");
+
+        if (email != null && !email.isEmpty() && !email.equals(user.getEmail())) {
+            SysUser byEmail = userMapper.selectByEmail(email);
+            if (byEmail != null && !byEmail.getId().equals(user.getId())) {
+                return ResponseEntity.status(409).body(Map.of("message", "邮箱已被其他用户使用"));
+            }
+        }
+        if (phone != null && !phone.isEmpty() && !phone.equals(user.getPhone())) {
+            SysUser byPhone = userMapper.selectByPhone(phone);
+            if (byPhone != null && !byPhone.getId().equals(user.getId())) {
+                return ResponseEntity.status(409).body(Map.of("message", "电话已被其他用户使用"));
+            }
+        }
+
+        if (nickname != null) user.setNickname(nickname);
+        if (email != null) user.setEmail(email);
+        if (phone != null) user.setPhone(phone);
+        user.setUpdatedAt(java.time.LocalDateTime.now());
+
+        userMapper.update(user);
+
+        return ResponseEntity.ok(Map.of("message", "更新成功"));
     }
 }

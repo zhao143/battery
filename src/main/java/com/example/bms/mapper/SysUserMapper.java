@@ -10,6 +10,8 @@ import java.util.List;
 public interface SysUserMapper {
     SysUser selectById(@Param("id") Long id);
     SysUser selectByUsername(@Param("username") String username);
+    SysUser selectByEmail(@Param("email") String email);
+    SysUser selectByPhone(@Param("phone") String phone);
     List<SysUser> selectAll();
     int insert(SysUser user);
     int update(SysUser user);

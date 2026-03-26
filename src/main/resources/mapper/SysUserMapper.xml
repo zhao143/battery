@@ -16,12 +16,20 @@
         <result property="updatedAt" column="updated_at" />
     </resultMap>
 
+    <select id="selectById" resultMap="SysUserMap">
+        SELECT * FROM sys_user WHERE id = #{id}
+    </select>
+
     <select id="selectByUsername" resultMap="SysUserMap">
         SELECT * FROM sys_user WHERE username = #{username}
     </select>
 
-    <select id="selectById" resultMap="SysUserMap">
-        SELECT * FROM sys_user WHERE id = #{id}
+    <select id="selectByEmail" resultMap="SysUserMap">
+        SELECT * FROM sys_user WHERE email = #{email}
+    </select>
+
+    <select id="selectByPhone" resultMap="SysUserMap">
+        SELECT * FROM sys_user WHERE phone = #{phone}
     </select>
 
     <select id="selectAll" resultMap="SysUserMap">
@@ -35,8 +43,10 @@
 
     <update id="update" parameterType="com.example.bms.domain.SysUser">
         UPDATE sys_user SET
-            password = #{password}, nickname = #{nickname}, email = #{email}, phone = #{phone},
-            status = #{status}, updated_at = #{updatedAt}
+            nickname = #{nickname},
+            email = #{email},
+            phone = #{phone},
+            updated_at = #{updatedAt}
         WHERE id = #{id}
     </update>
 
@@ -45,7 +55,7 @@
     </delete>
 
     <insert id="insertUserRole">
-        INSERT INTO sys_user_role (user_id, role_id) VALUES (#{userId}, #{roleId})
+        INSERT INTO sys_user_role(user_id, role_id) VALUES(#{userId}, #{roleId})
     </insert>
 
 </mapper>
