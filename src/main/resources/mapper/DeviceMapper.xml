@@ -16,31 +16,44 @@
     </resultMap>
 
     <select id="selectByUuid" resultMap="DeviceMap">
-        SELECT * FROM device WHERE device_uuid = #{uuid}
+        SELECT d.*, dt.type_code as device_type
+        FROM device d
+        LEFT JOIN device_type dt ON d.device_type_id = dt.id
+        WHERE d.device_uuid = #{uuid}
     </select>
 
     <select id="selectById" resultMap="DeviceMap">
-        SELECT * FROM device WHERE id = #{id}
+        SELECT d.*, dt.type_code as device_type
+        FROM device d
+        LEFT JOIN device_type dt ON d.device_type_id = dt.id
+        WHERE d.id = #{id}
     </select>
 
     <select id="selectAll" resultMap="DeviceMap">
-        SELECT * FROM device ORDER BY id
+        SELECT d.*, dt.type_code as device_type
+        FROM device d
+        LEFT JOIN device_type dt ON d.device_type_id = dt.id
+        ORDER BY d.id
     </select>
 
     <select id="selectByUserId" resultMap="DeviceMap">
-        SELECT d.* FROM device d
+        SELECT d.*, dt.type_code as device_type
+        FROM device d
+        LEFT JOIN device_type dt ON d.device_type_id = dt.id
         WHERE d.user_id = #{userId}
         OR d.id IN (SELECT ud.device_id FROM user_device ud WHERE ud.user_id = #{userId})
     </select>
 
     <insert id="insert" parameterType="com.example.bms.domain.Device" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO device(device_uuid, device_name, device_type, status, user_id, created_at, updated_at)
-        VALUES(#{deviceUuid}, #{deviceName}, #{deviceType}, #{status}, #{userId}, #{createdAt}, #{updatedAt})
+        INSERT INTO device(device_uuid, device_name, device_type_id, status, user_id, created_at, updated_at)
+        SELECT #{deviceUuid}, #{deviceName}, id, #{status}, #{userId}, #{createdAt}, #{updatedAt}
+        FROM device_type WHERE type_code = #{deviceType}
     </insert>
 
     <update id="update" parameterType="com.example.bms.domain.Device">
         UPDATE device SET
-            device_name = #{deviceName}, device_type = #{deviceType},
+            device_name = #{deviceName},
+            device_type_id = (SELECT id FROM device_type WHERE type_code = #{deviceType}),
             status = #{status}, updated_at = #{updatedAt}
         WHERE id = #{id}
     </update>
