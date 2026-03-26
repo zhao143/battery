@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.bms.mapper.DataTypeMapper">
+
+    <select id="findIdByCode" resultType="java.lang.Long">
+        SELECT id FROM data_type WHERE type_code = #{typeCode}
+    </select>
+
+    <select id="findCodeById" resultType="java.lang.String">
+        SELECT type_code FROM data_type WHERE id = #{id}
+    </select>
+
+</mapper>
