@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>电池管理系统</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 20px; }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .card { border: 1px solid #ddd; border-radius: 8px; padding: 12px; }
+    .row { display: flex; justify-content: space-between; margin: 6px 0; }
+    button { padding: 6px 12px; margin-left: 8px; }
+    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+    .muted { color:#666; font-size: 12px; }
+    .cmdbox { display:flex; gap:8px; align-items:center; }
+    input[type=text] { flex:1; padding:6px 8px; border:1px solid #ccc; border-radius:6px; }
+    .formrow { display:flex; gap:8px; align-items:center; margin:6px 0; }
+    .formrow label { width:120px; }
+  </style>
+  <script>
+    async function fetchControl() {
+      const r = await fetch('/api/control');
+      const j = await r.json();
+      document.getElementById('fan-state').textContent = j.fan;
+      document.getElementById('relay-state').textContent = j.relay;
+    }
+    async function setControl(type, value) {
+      const body = {}; body[type] = value;
+      await fetch('/api/control', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+      fetchControl();
+    }
+    function initStream() {
+      const es = new EventSource('/api/battery/stream');
+      es.onmessage = (e) => {
+        const d = JSON.parse(e.data);
+        document.getElementById('voltage').textContent = d.voltage;
+        document.getElementById('current').textContent = d.current;
+        document.getElementById('temperature').textContent = d.temperature;
+        document.getElementById('charge').textContent = d.charge;
+        document.getElementById('power').textContent = d.power;
+        document.getElementById('fanState').textContent = d.fanState;
+        document.getElementById('relayState').textContent = d.relayState;
+        document.getElementById('alarmState').textContent = d.alarmState;
+        document.getElementById('timestamp').textContent = d.createdAt || '';
+      };
+    }
+    async function sendCmd() {
+      const cmd = document.getElementById('custom-cmd').value.trim();
+      if (!cmd) return;
+      const r = await fetch('/api/tcp/send', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({cmd}) });
+      const j = await r.json();
+      document.getElementById('cmd-result').textContent = '已发送：' + (j.sent || '');
+    }
+    async function fetchThreshold() {
+      const r = await fetch('/api/threshold');
+      const j = await r.json();
+      document.getElementById('vmax').value = j?.vmax ?? '';
+      document.getElementById('vmin').value = j?.vmin ?? '';
+      document.getElementById('imax').value = j?.imax ?? '';
+      document.getElementById('tmax').value = j?.tmax ?? '';
+    }
+    async function setThreshold(key) {
+      const map = { vmax: '/api/threshold/vmax', vmin: '/api/threshold/vmin', imax: '/api/threshold/imax', tmax: '/api/threshold/tmax' };
+      const val = document.getElementById(key).value.trim();
+      if (!val) return;
+      const body = key === 'tmax' ? { value: parseInt(val, 10) } : { value: parseFloat(val) };
+      await fetch(map[key], { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+      fetchThreshold();
+    }
+    window.addEventListener('DOMContentLoaded', () => { fetchControl(); initStream(); fetchThreshold(); });
+  </script>
+</head>
+<body>
+  <div class="header">
+    <h2>电池管理系统</h2>
+    <a href="/swagger-ui.html" target="_blank">Swagger UI</a>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h3>实时监控</h3>
+      <div class="row"><span>电压(V)</span><b id="voltage">-</b></div>
+      <div class="row"><span>电流(A)</span><b id="current">-</b></div>
+      <div class="row"><span>温度(°C)</span><b id="temperature">-</b></div>
+      <div class="row"><span>电量(%)</span><b id="charge">-</b></div>
+      <div class="row"><span>功率(W)</span><b id="power">-</b></div>
+      <div class="row"><span>风扇状态</span><b id="fanState">-</b></div>
+      <div class="row"><span>继电器状态</span><b id="relayState">-</b></div>
+      <div class="row"><span>报警状态</span><b id="alarmState">-</b></div>
+      <div class="muted">时间：<span id="timestamp">-</span></div>
+    </div>
+    <div class="card">
+      <h3>控制面板</h3>
+      <div class="row">
+        <span>风扇：<b id="fan-state">-</b></span>
+        <span>
+          <button onclick="setControl('fan', 1)">开启</button>
+          <button onclick="setControl('fan', 0)">关闭</button>
+        </span>
+      </div>
+      <div class="row">
+        <span>继电器：<b id="relay-state">-</b></span>
+        <span>
+          <button onclick="setControl('relay', 1)">闭合</button>
+          <button onclick="setControl('relay', 0)">断开</button>
+        </span>
+      </div>
+      <div class="muted">控制状态会通过TCP广播给在线客户端</div>
+      <hr />
+      <h4>发送调试命令</h4>
+      <div class="cmdbox">
+        <input id="custom-cmd" type="text" placeholder="输入要发送的命令，如：PING" />
+        <button onclick="sendCmd()">发送</button>
+      </div>
+      <div class="muted" id="cmd-result"></div>
+      <hr />
+      <h4>阈值设置</h4>
+      <div class="formrow">
+        <label>最高电压</label>
+        <input id="vmax" type="text" placeholder="如：300" />
+        <button onclick="setThreshold('vmax')">设置</button>
+      </div>
+      <div class="formrow">
+        <label>最低电压</label>
+        <input id="vmin" type="text" placeholder="如：200" />
+        <button onclick="setThreshold('vmin')">设置</button>
+      </div>
+      <div class="formrow">
+        <label>最大电流</label>
+        <input id="imax" type="text" placeholder="如：15.5" />
+        <button onclick="setThreshold('imax')">设置</button>
+      </div>
+      <div class="formrow">
+        <label>温度阈值</label>
+        <input id="tmax" type="text" placeholder="如：80" />
+        <button onclick="setThreshold('tmax')">设置</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

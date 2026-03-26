@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.bms.mapper.DeviceMapper">
+
+    <resultMap id="DeviceMap" type="com.example.bms.domain.Device">
+        <id property="id" column="id" />
+        <result property="deviceUuid" column="device_uuid" />
+        <result property="deviceName" column="device_name" />
+        <result property="deviceType" column="device_type" />
+        <result property="status" column="status" />
+        <result property="userId" column="user_id" />
+        <result property="createdAt" column="created_at" />
+        <result property="updatedAt" column="updated_at" />
+    </resultMap>
+
+    <select id="selectByUuid" resultMap="DeviceMap">
+        SELECT * FROM device WHERE device_uuid = #{uuid}
+    </select>
+
+    <select id="selectById" resultMap="DeviceMap">
+        SELECT * FROM device WHERE id = #{id}
+    </select>
+
+    <select id="selectAll" resultMap="DeviceMap">
+        SELECT * FROM device ORDER BY id
+    </select>
+
+    <select id="selectByUserId" resultMap="DeviceMap">
+        SELECT d.* FROM device d
+        WHERE d.user_id = #{userId}
+        OR d.id IN (SELECT ud.device_id FROM user_device ud WHERE ud.user_id = #{userId})
+    </select>
+
+    <insert id="insert" parameterType="com.example.bms.domain.Device" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO device(device_uuid, device_name, device_type, status, user_id, created_at, updated_at)
+        VALUES(#{deviceUuid}, #{deviceName}, #{deviceType}, #{status}, #{userId}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="update" parameterType="com.example.bms.domain.Device">
+        UPDATE device SET
+            device_name = #{deviceName}, device_type = #{deviceType},
+            status = #{status}, updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM device WHERE id = #{id}
+    </delete>
+
+    <update id="updateStatus">
+        UPDATE device SET status = #{status}, updated_at = NOW() WHERE device_uuid = #{uuid}
+    </update>
+
+    <update id="updateUserId">
+        UPDATE device SET user_id = #{userId}, updated_at = NOW() WHERE id = #{id}
+    </update>
+
+</mapper>

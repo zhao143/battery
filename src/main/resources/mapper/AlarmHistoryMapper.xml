@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.bms.mapper.AlarmHistoryMapper">
+
+    <resultMap id="AlarmHistoryMap" type="com.example.bms.domain.AlarmHistory">
+        <id property="id" column="id" />
+        <result property="deviceUuid" column="device_uuid" />
+        <result property="voltage" column="voltage" />
+        <result property="current" column="current" />
+        <result property="temperature" column="temperature" />
+        <result property="charge" column="charge" />
+        <result property="power" column="power" />
+        <result property="fanState" column="fan_state" />
+        <result property="relayState" column="relay_state" />
+        <result property="alarmState" column="alarm_state" />
+        <result property="processStatus" column="process_status" />
+        <result property="vMax" column="v_max" />
+        <result property="vMin" column="v_min" />
+        <result property="iMax" column="i_max" />
+        <result property="tMax" column="t_max" />
+        <result property="createdAt" column="created_at" />
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.bms.domain.AlarmHistory" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO alarm_history(
+            device_uuid, voltage, current, temperature, charge, power,
+            fan_state, relay_state, alarm_state, process_status,
+            v_max, v_min, i_max, t_max,
+            created_at
+        ) VALUES (
+            #{deviceUuid}, #{voltage}, #{current}, #{temperature}, #{charge}, #{power},
+            #{fanState}, #{relayState}, #{alarmState}, #{processStatus},
+            #{vMax}, #{vMin}, #{iMax}, #{tMax},
+            #{createdAt}
+        )
+    </insert>
+
+    <select id="selectAll" resultMap="AlarmHistoryMap">
+        SELECT * FROM alarm_history ORDER BY created_at DESC, id DESC
+    </select>
+
+    <update id="updateProcessStatus">
+        UPDATE alarm_history SET process_status = #{status} WHERE id = #{id}
+    </update>
+
+</mapper>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.bms.mapper.BatteryDataMapper">
+
+    <resultMap id="BatteryDataMap" type="com.example.bms.domain.BatteryData">
+        <id property="id" column="id" />
+        <result property="deviceUuid" column="device_uuid" />
+        <result property="voltage" column="voltage" />
+        <result property="current" column="current" />
+        <result property="temperature" column="temperature" />
+        <result property="charge" column="charge" />
+        <result property="power" column="power" />
+        <result property="fanState" column="fan_state" />
+        <result property="relayState" column="relay_state" />
+        <result property="alarmState" column="alarm_state" />
+        <result property="createdAt" column="created_at" />
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.bms.domain.BatteryData" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO battery_data(
+            device_uuid, voltage, current, temperature, charge, power, fan_state, relay_state, alarm_state, created_at
+        ) VALUES (
+            #{deviceUuid}, #{voltage}, #{current}, #{temperature}, #{charge}, #{power}, #{fanState}, #{relayState}, #{alarmState}, #{createdAt}
+        )
+    </insert>
+
+    <select id="selectLatest" resultMap="BatteryDataMap">
+        SELECT * FROM battery_data WHERE created_at >= DATE_SUB(NOW(), INTERVAL 5 MINUTE) ORDER BY created_at DESC, id DESC LIMIT 1
+    </select>
+
+    <select id="selectLatestByUuid" resultMap="BatteryDataMap">
+        SELECT * FROM battery_data WHERE device_uuid = #{deviceUuid} AND created_at >= DATE_SUB(NOW(), INTERVAL 5 MINUTE) ORDER BY created_at DESC, id DESC LIMIT 1
+    </select>
+
+    <select id="selectRecent" resultMap="BatteryDataMap">
+        SELECT * FROM battery_data ORDER BY created_at DESC, id DESC LIMIT #{limit}
+    </select>
+
+    <select id="selectRecentByUuid" resultMap="BatteryDataMap">
+        SELECT * FROM battery_data WHERE device_uuid = #{deviceUuid} ORDER BY created_at DESC, id DESC LIMIT #{limit}
+    </select>
+
+</mapper>

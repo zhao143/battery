@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.bms.mapper.UserDeviceMapper">
+
+    <resultMap id="UserDeviceMap" type="com.example.bms.domain.UserDevice">
+        <id property="id" column="id" />
+        <result property="userId" column="user_id" />
+        <result property="deviceId" column="device_id" />
+        <result property="createdAt" column="created_at" />
+    </resultMap>
+
+    <select id="selectByUserId" resultMap="UserDeviceMap">
+        SELECT * FROM user_device WHERE user_id = #{userId}
+    </select>
+
+    <select id="selectByDeviceId" resultMap="UserDeviceMap">
+        SELECT * FROM user_device WHERE device_id = #{deviceId}
+    </select>
+
+    <insert id="insert" parameterType="com.example.bms.domain.UserDevice" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user_device(user_id, device_id, created_at)
+        VALUES(#{userId}, #{deviceId}, #{createdAt})
+    </insert>
+
+    <delete id="delete">
+        DELETE FROM user_device WHERE user_id = #{userId} AND device_id = #{deviceId}
+    </delete>
+
+</mapper>

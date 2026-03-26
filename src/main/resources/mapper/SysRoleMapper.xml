@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.bms.mapper.SysRoleMapper">
+
+    <resultMap id="SysRoleMap" type="com.example.bms.domain.SysRole">
+        <id property="id" column="id" />
+        <result property="roleName" column="role_name" />
+        <result property="roleKey" column="role_key" />
+        <result property="description" column="description" />
+        <result property="createdAt" column="created_at" />
+    </resultMap>
+
+    <select id="selectByUserId" resultMap="SysRoleMap">
+        SELECT r.* FROM sys_role r
+        INNER JOIN sys_user_role ur ON r.id = ur.role_id
+        WHERE ur.user_id = #{userId}
+    </select>
+
+    <select id="selectAll" resultMap="SysRoleMap">
+        SELECT * FROM sys_role ORDER BY id
+    </select>
+
+    <insert id="insert" parameterType="com.example.bms.domain.SysRole" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sys_role(role_name, role_key, description, created_at)
+        VALUES(#{roleName}, #{roleKey}, #{description}, #{createdAt})
+    </insert>
+
+    <delete id="deleteById">
+        DELETE FROM sys_role WHERE id = #{id}
+    </delete>
+
+    <select id="selectByRoleKey" resultMap="SysRoleMap">
+        SELECT * FROM sys_role WHERE role_key = #{roleKey}
+    </select>
+
+</mapper>

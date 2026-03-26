@@ -1,0 +1,24 @@
+{
+  "name": "bms-web",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.5",
+    "typescript": "~5.9.3",
+    "vite": "^8.0.0"
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "^2.3.2",
+    "axios": "^1.13.6",
+    "echarts": "^6.0.0",
+    "element-plus": "^2.13.5",
+    "vue-echarts": "^8.0.1",
+    "vue-router": "^5.0.3"
+  }
+}
